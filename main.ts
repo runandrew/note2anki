@@ -29,34 +29,7 @@ export default class Note2Anki extends Plugin {
 		await this.loadSettings();
 
 		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
-			(async () => {
-				try {
-					const mds = await new MdParser(this.app).parseMdDir(
-						this.settings.folder,
-						this.settings.recursive
-					);
-					new Notice(`Found ${mds.length} notes`);
-
-					const anki = new AnkiConnect();
-
-					for (const md of mds) {
-						const htmlContent = await marked(md.content);
-
-						const fields: BasicNoteFields = {
-							Front: md.name,
-							Back: htmlContent,
-						};
-
-						await anki.upsertNote(fields, md.deck);
-					}
-				} catch (e) {
-					new Notice(
-						`Note2Anki error: ${
-							e instanceof Error ? e.message : String(e)
-						}`
-					);
-				}
-			})();
+			this.processNotes(this.settings.folder, this.settings.recursive);
 		});
 
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -74,6 +47,33 @@ export default class Note2Anki extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async processNotes(folder: string, recursive: boolean) {
+		try {
+			const mds = await new MdParser(this.app).parseMdDir(
+				folder,
+				recursive
+			);
+			new Notice(`Found ${mds.length} notes`);
+
+			const anki = new AnkiConnect();
+
+			for (const md of mds) {
+				const htmlContent = await marked(md.content);
+
+				const fields: BasicNoteFields = {
+					Front: md.name,
+					Back: htmlContent,
+				};
+
+				await anki.upsertNote(fields, md.deck);
+			}
+		} catch (e) {
+			new Notice(
+				`Note2Anki error: ${e instanceof Error ? e.message : String(e)}`
+			);
+		}
 	}
 }
 
