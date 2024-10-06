@@ -9,7 +9,7 @@ import {
 	FuzzySuggestModal,
 } from "obsidian";
 
-import * as anki from "./lib/anki";
+import { AnkiConnect, BasicNoteFields } from "./lib/anki";
 import { MdParser } from "./lib/source";
 
 interface Settings {
@@ -37,10 +37,12 @@ export default class Note2Anki extends Plugin {
 					);
 					new Notice(`Found ${mds.length} notes`);
 
+					const anki = new AnkiConnect();
+
 					for (const md of mds) {
 						const htmlContent = await marked(md.content);
 
-						const fields: anki.BasicNoteFields = {
+						const fields: BasicNoteFields = {
 							Front: md.name,
 							Back: htmlContent,
 						};
