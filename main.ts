@@ -1,3 +1,4 @@
+import { marked } from "marked";
 import {
 	App,
 	Notice,
@@ -7,9 +8,9 @@ import {
 	TFolder,
 	FuzzySuggestModal,
 } from "obsidian";
-import { MdParser } from "./lib/source";
-import { marked } from "marked";
+
 import * as anki from "./lib/anki";
+import { MdParser } from "./lib/source";
 
 interface Settings {
 	folder: string;

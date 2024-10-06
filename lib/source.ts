@@ -1,6 +1,7 @@
-import { App, TFolder, TFile } from "obsidian";
-import matter from "gray-matter";
 import assert from "assert";
+
+import matter from "gray-matter";
+import { App, TFolder, TFile } from "obsidian";
 
 interface Md {
 	name: string;
@@ -47,7 +48,7 @@ export class MdParser {
 		);
 	}
 
-	async parseMdDir(path: string, recursive: boolean = true): Promise<Md[]> {
+	async parseMdDir(path: string, recursive = true): Promise<Md[]> {
 		const folder = this.app.vault.getFolderByPath(path);
 		if (!folder) {
 			throw new Error("Folder not found");
