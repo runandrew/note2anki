@@ -7,7 +7,7 @@ import {
 	TFolder,
 	FuzzySuggestModal,
 } from "obsidian";
-import { parseMdDir } from "./lib/source";
+import { MdParser } from "./lib/source";
 import { marked } from "marked";
 import * as anki from "./lib/anki";
 
@@ -30,8 +30,7 @@ export default class Note2Anki extends Plugin {
 		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
 			(async () => {
 				try {
-					const mds = await parseMdDir(
-						this.app,
+					const mds = await new MdParser(this.app).parseMdDir(
 						this.settings.folder,
 						this.settings.recursive
 					);

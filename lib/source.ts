@@ -8,55 +8,67 @@ interface Md {
 	content: string;
 }
 
-async function parseMd(app: App, file: TFile): Promise<Md> {
-	const fileContents = await app.vault.cachedRead(file);
-	const { data, content } = matter(fileContents);
+export class MdParser {
+	app: App;
 
-	const deck = data["anki-deck"];
-	const name = file.name.replace(/\.md$/, "");
-
-	assert(typeof deck === "string", "anki-deck file property is not defined");
-	assert(deck !== "", "anki-deck file property is empty");
-
-	return {
-		name,
-		deck,
-		content,
-	};
-}
-
-async function isValidMdFile(app: App, file: TFile): Promise<boolean> {
-	if (!file.path.endsWith(".md")) {
-		return false;
+	constructor(app: App) {
+		this.app = app;
 	}
 
-	const fileContents = await app.vault.cachedRead(file);
-	const { data } = matter(fileContents);
-	return typeof data["anki-deck"] === "string" && data["anki-deck"] !== "";
-}
+	async parseMd(file: TFile): Promise<Md> {
+		const fileContents = await this.app.vault.cachedRead(file);
+		const { data, content } = matter(fileContents);
 
-export async function parseMdDir(
-	app: App,
-	path: string,
-	recursive: boolean = true
-): Promise<Md[]> {
-	const folder = app.vault.getFolderByPath(path);
-	if (!folder) {
-		throw new Error("Folder not found");
+		const deck = data["anki-deck"];
+		const name = file.name.replace(/\.md$/, "");
+
+		assert(
+			typeof deck === "string",
+			"anki-deck file property is not defined"
+		);
+		assert(deck !== "", "anki-deck file property is empty");
+
+		return {
+			name,
+			deck,
+			content,
+		};
 	}
-	const files = folder.children;
 
-	const out: Md[] = [];
-
-	for (const file of files) {
-		if (file instanceof TFolder) {
-			if (recursive) {
-				out.push(...(await parseMdDir(app, file.path, true)));
-			}
-		} else if (file instanceof TFile && (await isValidMdFile(app, file))) {
-			out.push(await parseMd(app, file));
+	private async isValidMdFile(file: TFile): Promise<boolean> {
+		if (!file.path.endsWith(".md")) {
+			return false;
 		}
+
+		const fileContents = await this.app.vault.cachedRead(file);
+		const { data } = matter(fileContents);
+		return (
+			typeof data["anki-deck"] === "string" && data["anki-deck"] !== ""
+		);
 	}
 
-	return out;
+	async parseMdDir(path: string, recursive: boolean = true): Promise<Md[]> {
+		const folder = this.app.vault.getFolderByPath(path);
+		if (!folder) {
+			throw new Error("Folder not found");
+		}
+		const files = folder.children;
+
+		const out: Md[] = [];
+
+		for (const file of files) {
+			if (file instanceof TFolder) {
+				if (recursive) {
+					out.push(...(await this.parseMdDir(file.path, true)));
+				}
+			} else if (
+				file instanceof TFile &&
+				(await this.isValidMdFile(file))
+			) {
+				out.push(await this.parseMd(file));
+			}
+		}
+
+		return out;
+	}
 }
