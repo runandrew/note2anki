@@ -156,4 +156,15 @@ export class AnkiConnect {
 		}
 		return null;
 	}
+
+	async testConnection(): Promise<void> {
+		try {
+			const response = await this.ankiConnect("version", {});
+			if (response === null || response === undefined) {
+				throw new Error("No response from AnkiConnect");
+			}
+		} catch (error) {
+			throw new Error(`AnkiConnect connection failed: ${error.message}`);
+		}
+	}
 }

@@ -125,6 +125,27 @@ class SettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("Test Anki Connection")
+			.setDesc("Test that the AnkiConnect server is available")
+			.addButton((button) =>
+				button.setButtonText("Test Connection").onClick(async () => {
+					try {
+						const anki = new AnkiConnect();
+						await anki.testConnection();
+						new Notice("Successfully connected to AnkiConnect!");
+					} catch (error) {
+						new Notice(
+							`Failed to connect to AnkiConnect: ${
+								error instanceof Error
+									? error.message
+									: String(error)
+							}`
+						);
+					}
+				})
+			);
 	}
 }
 
