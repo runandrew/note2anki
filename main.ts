@@ -5,7 +5,6 @@ import {
 	PluginSettingTab,
 	Setting,
 	TFolder,
-	TFile,
 	FuzzySuggestModal,
 } from "obsidian";
 import { parseMdDir } from "./lib/source";
@@ -30,28 +29,35 @@ export default class Note2Anki extends Plugin {
 
 		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
 			(async () => {
-				const mds = await parseMdDir(
-					this.app,
-					this.settings.folder,
-					this.settings.recursive
-				);
-				new Notice(`Found ${mds.length} notes`);
+				try {
+					const mds = await parseMdDir(
+						this.app,
+						this.settings.folder,
+						this.settings.recursive
+					);
+					new Notice(`Found ${mds.length} notes`);
 
-				for (const md of mds) {
-					const htmlContent = await marked(md.content);
+					for (const md of mds) {
+						const htmlContent = await marked(md.content);
 
-					const fields: anki.BasicNoteFields = {
-						Front: md.name,
-						Back: htmlContent,
-					};
+						const fields: anki.BasicNoteFields = {
+							Front: md.name,
+							Back: htmlContent,
+						};
 
-					await anki.upsertNote(fields, md.deck);
+						await anki.upsertNote(fields, md.deck);
+					}
+				} catch (e) {
+					new Notice(
+						`Note2Anki error: ${
+							e instanceof Error ? e.message : String(e)
+						}`
+					);
 				}
 			})();
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
 	onunload() {}
@@ -69,7 +75,7 @@ export default class Note2Anki extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class SettingTab extends PluginSettingTab {
 	plugin: Note2Anki;
 
 	constructor(app: App, plugin: Note2Anki) {
@@ -104,7 +110,6 @@ class SampleSettingTab extends PluginSettingTab {
 				})
 			);
 
-		// Keep the recursive setting as is
 		new Setting(containerEl)
 			.setName("Recursive")
 			.setDesc(
