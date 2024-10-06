@@ -7,6 +7,8 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	TFolder,
+	FuzzySuggestModal,
 } from "obsidian";
 
 // Remember to rename these classes and interfaces!
@@ -97,12 +99,22 @@ class SampleSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("Folder path")
 					.setValue(this.plugin.settings.folder)
-					.onChange(async (value) => {
-						this.plugin.settings.folder = value;
-						await this.plugin.saveSettings();
-					})
+					.setDisabled(true)
+			)
+			.addButton((button) =>
+				button.setButtonText("Browse").onClick(() => {
+					const onSelect = (folder: TFolder) => {
+						this.plugin.settings.folder = folder.path;
+						this.plugin.saveSettings();
+						this.display(); // Refresh the display to show the new folder
+					};
+
+					const modal = new FolderSuggestModal(this.app, onSelect);
+					modal.open();
+				})
 			);
 
+		// Keep the recursive setting as is
 		new Setting(containerEl)
 			.setName("Recursive")
 			.setDesc(
@@ -116,5 +128,34 @@ class SampleSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+	}
+}
+
+class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
+	private onSelect: (
+		folder: TFolder,
+		evt: MouseEvent | KeyboardEvent
+	) => void;
+
+	constructor(
+		app: App,
+		onSelect: (folder: TFolder, evt: MouseEvent | KeyboardEvent) => void
+	) {
+		super(app);
+		this.onSelect = onSelect;
+	}
+
+	getItems(): TFolder[] {
+		return this.app.vault
+			.getAllLoadedFiles()
+			.filter((file) => file instanceof TFolder) as TFolder[];
+	}
+
+	getItemText(folder: TFolder): string {
+		return folder.path;
+	}
+
+	onChooseItem(folder: TFolder, evt: MouseEvent | KeyboardEvent) {
+		this.onSelect(folder, evt);
 	}
 }
