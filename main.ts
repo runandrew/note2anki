@@ -90,6 +90,8 @@ class SettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		containerEl.createEl("h2", { text: "Note2Anki" });
+
 		new Setting(containerEl)
 			.setName("Root folder")
 			.setDesc("This folder will be searched for notes to convert")
@@ -113,9 +115,9 @@ class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Recursive")
+			.setName("Include Subfolders")
 			.setDesc(
-				"If true, all subfolders will be searched for notes to convert"
+				"If enabled, all subfolders will be searched for notes to convert"
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -127,7 +129,7 @@ class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Test Anki Connection")
+			.setName("Test AnkiConnect Connection")
 			.setDesc("Test that the AnkiConnect server is available")
 			.addButton((button) =>
 				button.setButtonText("Test Connection").onClick(async () => {
