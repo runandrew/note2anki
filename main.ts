@@ -5,8 +5,12 @@ import {
 	PluginSettingTab,
 	Setting,
 	TFolder,
+	TFile,
 	FuzzySuggestModal,
 } from "obsidian";
+import { parseMdDir } from "./lib/source";
+import { marked } from "marked";
+import * as anki from "./lib/anki";
 
 interface Settings {
 	folder: string;
@@ -24,23 +28,30 @@ export default class Note2Anki extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		this.addRibbonIcon("lamp-desk", "Sample Plugin", (evt: MouseEvent) => {
-			new Notice("Test from the plugin");
+		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
+			(async () => {
+				const mds = await parseMdDir(
+					this.app,
+					this.settings.folder,
+					this.settings.recursive
+				);
+				new Notice(`Found ${mds.length} notes`);
+
+				for (const md of mds) {
+					const htmlContent = await marked(md.content);
+
+					const fields: anki.BasicNoteFields = {
+						Front: md.name,
+						Back: htmlContent,
+					};
+
+					await anki.upsertNote(fields, md.deck);
+				}
+			})();
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-			console.log("click", evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000)
-		);
 	}
 
 	onunload() {}
