@@ -32,36 +32,14 @@ export class AnkiConnect {
 		})
 	);
 	private static readonly FindNotesResultSchema = z.array(z.number());
+	private static readonly RequestPermissionResultSchema = z.object({
+		permission: z.union([z.literal("granted"), z.literal("denied")]),
+		requireApiKey: z.boolean().optional(),
+	});
 	private static readonly AnkiConnectResponseSchema = z.object({
 		result: z.unknown(),
 		error: z.union([z.string(), z.null()]),
 	});
-
-	private async ankiConnect(
-		action: string,
-		params: unknown
-	): Promise<unknown> {
-		const response = await fetch("http://localhost:8765", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				action,
-				version: 6,
-				params,
-			}),
-		});
-
-		const data = AnkiConnect.AnkiConnectResponseSchema.parse(
-			await response.json()
-		);
-		if (data.error) {
-			throw new Error(`Anki Connect: ${data.error}`);
-		}
-
-		return data.result;
-	}
 
 	async createNote(fields: BasicNoteFields, deck: string): Promise<number> {
 		console.log(
@@ -166,5 +144,45 @@ export class AnkiConnect {
 		} catch (error) {
 			throw new Error(`AnkiConnect connection failed: ${error.message}`);
 		}
+	}
+
+	async requestPermission(): Promise<void> {
+		const response = await this.ankiConnect("requestPermission", {});
+		const validatedResponse =
+			AnkiConnect.RequestPermissionResultSchema.parse(response);
+		if (validatedResponse.permission === "denied") {
+			throw new Error("Permission denied");
+		}
+		if (validatedResponse.requireApiKey) {
+			throw new Error("API key required");
+		}
+	}
+
+	private async ankiConnect(
+		action: string,
+		params: unknown
+	): Promise<unknown> {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.addEventListener("error", () =>
+				reject("failed to issue request")
+			);
+			xhr.addEventListener("load", () => {
+				try {
+					const response = JSON.parse(xhr.responseText);
+					const data =
+						AnkiConnect.AnkiConnectResponseSchema.parse(response);
+					if (data.error) {
+						throw new Error(`Anki Connect: ${data.error}`);
+					}
+					resolve(data.result);
+				} catch (e) {
+					reject(e);
+				}
+			});
+
+			xhr.open("POST", "http://127.0.0.1:8765");
+			xhr.send(JSON.stringify({ action, version: 6, params }));
+		});
 	}
 }

@@ -129,6 +129,27 @@ class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Request AnkiConnect Permission")
+			.setDesc("Request permission to use AnkiConnect")
+			.addButton((button) =>
+				button.setButtonText("Request Permission").onClick(async () => {
+					const anki = new AnkiConnect();
+					try {
+						await anki.requestPermission();
+						new Notice("Permission granted");
+					} catch (error) {
+						new Notice(
+							`Failed to request permission: ${
+								error instanceof Error
+									? error.message
+									: String(error)
+							}`
+						);
+					}
+				})
+			);
+
+		new Setting(containerEl)
 			.setName("Test AnkiConnect Connection")
 			.setDesc("Test that the AnkiConnect server is available")
 			.addButton((button) =>
