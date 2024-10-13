@@ -5,7 +5,7 @@ An Obsidian plugin to create Anki cards from Obsidian notes.
 ## Set up
 
 1. Install this plugin through Obsidian's community plugins directory
-1. Install [AnkiConnect](https://foosoft.net/projects/anki-connect/), a add-on for Anki that exposes an HTTP API. See the [installation instructions](https://foosoft.net/projects/anki-connect#installation).
+1. Install [AnkiConnect](https://foosoft.net/projects/anki-connect/), an add-on for Anki that exposes an HTTP API. See the [installation instructions](https://foosoft.net/projects/anki-connect#installation).
 1. While Anki is open, grant Obsidian access to the AnkiConnect API by going into Note2Anki's settings and clicking "Request Permission"
 1. Now you're ready to create cards!
 
@@ -44,4 +44,5 @@ Output:
 ## Limitations
 
 -   The deck set as `anki-deck` must exist prior to running Note2Anki
--   This plugin is only supported for desktop
+-   This plugin is only supported on desktop
+-   Note2Anki considers any change to a note's filename/title as a new note. So changing a note's filename/title will create a new card and the old card will remain unchanged.
