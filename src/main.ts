@@ -32,6 +32,17 @@ export default class Note2Anki extends Plugin {
 			this.processNotes(this.settings.folder, this.settings.recursive);
 		});
 
+		this.addCommand({
+			id: "run-note2anki",
+			name: "Process Notes to Anki",
+			callback: () => {
+				this.processNotes(
+					this.settings.folder,
+					this.settings.recursive
+				);
+			},
+		});
+
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
