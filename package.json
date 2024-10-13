@@ -1,6 +1,6 @@
 {
 	"name": "note2anki",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Convert your Obsidian notes into Anki cards",
 	"main": "main.js",
 	"scripts": {

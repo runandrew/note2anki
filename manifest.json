@@ -1,7 +1,7 @@
 {
 	"id": "note2anki",
 	"name": "Note2Anki",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"minAppVersion": "0.15.0",
 	"description": "Convert your Obsidian notes into Anki cards",
 	"author": "Andrew Garcia",
