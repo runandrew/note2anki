@@ -92,41 +92,7 @@ class SettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "Note2Anki" });
 
-		new Setting(containerEl)
-			.setName("Root folder")
-			.setDesc("This folder will be searched for notes to convert")
-			.addText((text) =>
-				text
-					.setPlaceholder("Folder path")
-					.setValue(this.plugin.settings.folder)
-					.setDisabled(true)
-			)
-			.addButton((button) =>
-				button.setButtonText("Browse").onClick(() => {
-					const onSelect = (folder: TFolder) => {
-						this.plugin.settings.folder = folder.path;
-						this.plugin.saveSettings();
-						this.display(); // Refresh the display to show the new folder
-					};
-
-					const modal = new FolderSuggestModal(this.app, onSelect);
-					modal.open();
-				})
-			);
-
-		new Setting(containerEl)
-			.setName("Include Subfolders")
-			.setDesc(
-				"If enabled, all subfolders will be searched for notes to convert"
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.recursive)
-					.onChange(async (value) => {
-						this.plugin.settings.recursive = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		containerEl.createEl("h3", { text: "Setup" });
 
 		new Setting(containerEl)
 			.setName("Request AnkiConnect Permission")
@@ -168,6 +134,44 @@ class SettingTab extends PluginSettingTab {
 						);
 					}
 				})
+			);
+
+		containerEl.createEl("h3", { text: "Settings" });
+
+		new Setting(containerEl)
+			.setName("Root folder")
+			.setDesc("This folder will be searched for notes to convert")
+			.addText((text) =>
+				text
+					.setPlaceholder("Folder path")
+					.setValue(this.plugin.settings.folder)
+					.setDisabled(true)
+			)
+			.addButton((button) =>
+				button.setButtonText("Browse").onClick(() => {
+					const onSelect = (folder: TFolder) => {
+						this.plugin.settings.folder = folder.path;
+						this.plugin.saveSettings();
+						this.display(); // Refresh the display to show the new folder
+					};
+
+					const modal = new FolderSuggestModal(this.app, onSelect);
+					modal.open();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName("Include Subfolders")
+			.setDesc(
+				"If enabled, all subfolders will be searched for notes to convert"
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.recursive)
+					.onChange(async (value) => {
+						this.plugin.settings.recursive = value;
+						await this.plugin.saveSettings();
+					})
 			);
 	}
 }
