@@ -58,6 +58,7 @@ export default class Note2Anki extends Plugin {
 			new Notice(`Found ${mds.length} notes`);
 
 			const anki = new AnkiConnect();
+			let unchanged = 0;
 
 			for (const md of mds) {
 				const htmlContent = await marked(md.content);
@@ -67,7 +68,20 @@ export default class Note2Anki extends Plugin {
 					Back: htmlContent,
 				};
 
-				await anki.upsertNote(fields, md.deck);
+				const result = await anki.upsertNote(fields, md.deck);
+
+				if (
+					result.action === "created" ||
+					result.action === "updated"
+				) {
+					new Notice(`Note "${md.name}" was ${result.action}`);
+				} else {
+					unchanged++;
+				}
+			}
+
+			if (unchanged > 0) {
+				new Notice(`${unchanged} notes were unchanged`);
 			}
 		} catch (e) {
 			new Notice(

@@ -12,6 +12,10 @@ export type BasicNoteFields = {
 	Back: string;
 };
 
+export type UpsertNoteResult = {
+	action: "created" | "updated" | "unchanged";
+};
+
 export class AnkiConnect {
 	private static readonly AddNoteResultSchema = z.number();
 	private static readonly UpdateNoteResultSchema = z.null();
@@ -77,7 +81,10 @@ export class AnkiConnect {
 		AnkiConnect.UpdateNoteResultSchema.parse(result);
 	}
 
-	async upsertNote(fields: BasicNoteFields, deck: string): Promise<void> {
+	async upsertNote(
+		fields: BasicNoteFields,
+		deck: string
+	): Promise<UpsertNoteResult> {
 		console.log(`Upserting note: "${fields.Front}"`);
 		const existingNote = await this.findNoteByQuery({
 			front: fields.Front,
@@ -87,13 +94,15 @@ export class AnkiConnect {
 		if (existingNote) {
 			if (isEqual(existingNote.fields, fields)) {
 				console.log(`Note "${fields.Front}" has not changed`);
-				return;
+				return { action: "unchanged" };
 			}
 			await this.updateNote(existingNote.id, fields, deck);
 			console.log(`Updated existing note: "${fields.Front}"`);
+			return { action: "updated" };
 		} else {
 			await this.createNote(fields, deck);
 			console.log(`Created new note: "${fields.Front}"`);
+			return { action: "created" };
 		}
 	}
 
