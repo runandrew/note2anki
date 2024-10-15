@@ -1,7 +1,8 @@
 import assert from "assert";
 
 import matter from "gray-matter";
-import { App, TFolder, TFile } from "obsidian";
+
+import { FileRepository, File } from "./files";
 
 interface Md {
 	name: string;
@@ -10,14 +11,10 @@ interface Md {
 }
 
 export class MdParser {
-	app: App;
+	constructor(private readonly fileRepository: FileRepository) {}
 
-	constructor(app: App) {
-		this.app = app;
-	}
-
-	async parseMd(file: TFile): Promise<Md> {
-		const fileContents = await this.app.vault.cachedRead(file);
+	async parseMd(file: File): Promise<Md> {
+		const fileContents = await file.getContent();
 		const { data, content } = matter(fileContents);
 
 		const deck = data["anki-deck"];
@@ -36,12 +33,12 @@ export class MdParser {
 		};
 	}
 
-	private async isValidMdFile(file: TFile): Promise<boolean> {
+	private async isValidMdFile(file: File): Promise<boolean> {
 		if (!file.path.endsWith(".md")) {
 			return false;
 		}
 
-		const fileContents = await this.app.vault.cachedRead(file);
+		const fileContents = await file.getContent();
 		const { data } = matter(fileContents);
 		return (
 			typeof data["anki-deck"] === "string" && data["anki-deck"] !== ""
@@ -49,23 +46,20 @@ export class MdParser {
 	}
 
 	async parseMdDir(path: string, recursive = true): Promise<Md[]> {
-		const folder = this.app.vault.getFolderByPath(path);
+		const folder = await this.fileRepository.getFolder(path);
 		if (!folder) {
 			throw new Error("Folder not found");
 		}
-		const files = folder.children;
+		const files = await folder.getChildren();
 
 		const out: Md[] = [];
 
 		for (const file of files) {
-			if (file instanceof TFolder) {
+			if (file.type === "folder") {
 				if (recursive) {
 					out.push(...(await this.parseMdDir(file.path, true)));
 				}
-			} else if (
-				file instanceof TFile &&
-				(await this.isValidMdFile(file))
-			) {
+			} else if (await this.isValidMdFile(file)) {
 				out.push(await this.parseMd(file));
 			}
 		}

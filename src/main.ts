@@ -11,6 +11,7 @@ import {
 } from "obsidian";
 
 import { AnkiConnect, BasicNoteFields } from "./lib/anki";
+import { ObsidianFileRepository } from "./lib/files";
 import { MdParser } from "./lib/source";
 
 interface Settings {
@@ -63,7 +64,9 @@ export default class Note2Anki extends Plugin {
 
 	async processNotes(folder: string, recursive: boolean) {
 		try {
-			const mds = await new MdParser(this.app).parseMdDir(
+			const fileRepository = new ObsidianFileRepository(this.app);
+
+			const mds = await new MdParser(fileRepository).parseMdDir(
 				folder,
 				recursive
 			);
