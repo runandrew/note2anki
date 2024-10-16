@@ -16,7 +16,7 @@ export interface Folder {
 export type AbstractFile = File | Folder;
 
 export interface FileRepository {
-	getFolder: (path: string) => Promise<Folder>;
+	getFolder: (path: string) => Promise<Folder | null>;
 }
 
 export class ObsidianFileRepository implements FileRepository {
