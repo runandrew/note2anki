@@ -7,6 +7,7 @@ import {
 	Setting,
 	TFolder,
 	FuzzySuggestModal,
+	TAbstractFile,
 } from "obsidian";
 
 import { AnkiConnect, BasicNoteFields } from "./lib/anki";
@@ -216,9 +217,13 @@ class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 	}
 
 	getItems(): TFolder[] {
-		return this.app.vault
-			.getAllLoadedFiles()
-			.filter((file) => file instanceof TFolder);
+		const folders: TFolder[] = [];
+		this.app.vault.getAllLoadedFiles().forEach((f: TAbstractFile) => {
+			if (f instanceof TFolder) {
+				folders.push(f);
+			}
+		});
+		return folders;
 	}
 
 	getItemText(folder: TFolder): string {
