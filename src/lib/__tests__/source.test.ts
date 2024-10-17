@@ -3,9 +3,6 @@ import { MdParser } from "../source";
 
 import { TestFile, TestFolder } from "./files";
 
-// Mock the FileRepository and its dependencies
-jest.mock("../files");
-
 describe("MdParser", () => {
 	let mdParser: MdParser;
 	let mockFileRepository: jest.Mocked<FileRepository>;
@@ -77,10 +74,16 @@ describe("MdParser", () => {
 				"a.md",
 				"---\nanki-deck: Test Deck\n---\nTest content A"
 			);
-			// fileB does not have the correct file properties
+			// fileB is invalid because it does not have the `anki-deck` header
 			const fileB = new TestFile("b.md", "---\n---\nTest content");
+			// fileC is invalid because it's not an .md file
+			const fileC = new TestFile(
+				"c.txt",
+				"---\nanki-deck: Test Deck\n---\nTest content A"
+			);
+
 			const folder = new TestFolder("root");
-			folder.addChildren([fileA, fileB]);
+			folder.addChildren([fileA, fileB, fileC]);
 
 			mockFileRepository.getFolder.mockResolvedValueOnce(folder);
 
