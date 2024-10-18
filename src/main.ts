@@ -82,16 +82,26 @@ export default class Note2Anki extends Plugin {
 				(nr) => nr.action === "unchanged"
 			);
 
-			created.forEach((nr) => {
-				new Notice(`Note "${nr.name}" was created`);
-			});
+			if (created.length > 0) {
+				new Notice(
+					created
+						.map((r) => `Note "${r.name}" was created`)
+						.join("\n"),
+					5000
+				);
+			}
 
-			updated.forEach((nr) => {
-				new Notice(`Note "${nr.name}" was updated`);
-			});
+			if (updated.length > 0) {
+				new Notice(
+					updated
+						.map((r) => `Note "${r.name}" was updated`)
+						.join("\n"),
+					5000
+				);
+			}
 
 			if (unchanged.length > 0) {
-				new Notice(`${unchanged.length} notes were unchanged`);
+				new Notice(`${unchanged.length} notes were unchanged`, 5000);
 			}
 
 			result.errors.forEach((error) => {
