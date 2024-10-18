@@ -1,3 +1,5 @@
+import { marked } from "marked";
+
 import { AnkiConnect } from "../anki";
 import { FileRepository } from "../files";
 import { NoteProcessor, ProcessNotesResult } from "../processor";
@@ -71,6 +73,23 @@ describe("NoteProcessor", () => {
 				true
 			);
 			expect(mockAnkiConnect.upsertNote).toHaveBeenCalledTimes(2);
+
+			expect(mockAnkiConnect.upsertNote).toHaveBeenNthCalledWith(
+				1,
+				{
+					Front: "Note 1",
+					Back: marked("# Note 1\nContent 1"),
+				},
+				"Deck 1"
+			);
+			expect(mockAnkiConnect.upsertNote).toHaveBeenNthCalledWith(
+				2,
+				{
+					Front: "Note 2",
+					Back: marked("# Note 2\nContent 2"),
+				},
+				"Deck 2"
+			);
 		});
 
 		it("should handle errors during note processing", async () => {
@@ -118,6 +137,23 @@ describe("NoteProcessor", () => {
 				false
 			);
 			expect(mockAnkiConnect.upsertNote).toHaveBeenCalledTimes(2);
+
+			expect(mockAnkiConnect.upsertNote).toHaveBeenNthCalledWith(
+				1,
+				{
+					Front: "Note 1",
+					Back: marked("# Note 1\nContent 1"),
+				},
+				"Deck 1"
+			);
+			expect(mockAnkiConnect.upsertNote).toHaveBeenNthCalledWith(
+				2,
+				{
+					Front: "Note 2",
+					Back: marked("# Note 2\nContent 2"),
+				},
+				"Deck 2"
+			);
 		});
 	});
 });
