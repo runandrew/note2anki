@@ -1,4 +1,3 @@
-import { marked } from "marked";
 import {
 	App,
 	Notice,
@@ -10,9 +9,9 @@ import {
 	TAbstractFile,
 } from "obsidian";
 
-import { AnkiConnect, BasicNoteFields } from "./lib/anki";
+import { AnkiConnect } from "./lib/anki";
 import { ObsidianFileRepository } from "./lib/files";
-import { MdParser } from "./lib/source";
+import { NoteProcessor } from "./lib/processor";
 
 interface Settings {
 	folder: string;
@@ -26,22 +25,23 @@ const DEFAULT_SETTINGS: Settings = {
 
 export default class Note2Anki extends Plugin {
 	settings: Settings;
+	private noteProcessingService: NoteProcessor;
 
 	async onload() {
 		await this.loadSettings();
+		this.noteProcessingService = new NoteProcessor(
+			new ObsidianFileRepository(this.app)
+		);
 
-		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
-			this.processNotes(this.settings.folder, this.settings.recursive);
+		this.addRibbonIcon("lamp-desk", "Note2Anki", () => {
+			this.processNotes();
 		});
 
 		this.addCommand({
 			id: "run-note2anki",
 			name: "Process Notes to Anki",
 			callback: () => {
-				this.processNotes(
-					this.settings.folder,
-					this.settings.recursive
-				);
+				this.processNotes();
 			},
 		});
 
@@ -62,45 +62,56 @@ export default class Note2Anki extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	async processNotes(folder: string, recursive: boolean) {
+	private async processNotes() {
+		new Notice("Processing notes...");
 		try {
-			const fileRepository = new ObsidianFileRepository(this.app);
-
-			const mds = await new MdParser(fileRepository).parseMdDir(
-				folder,
-				recursive
+			const result = await this.noteProcessingService.processNotes(
+				this.settings.folder,
+				this.settings.recursive
 			);
-			new Notice(`Found ${mds.length} notes`);
 
-			const anki = new AnkiConnect();
-			let unchanged = 0;
+			new Notice(`Found ${result.totalNotes} notes`);
 
-			for (const md of mds) {
-				const htmlContent = await marked(md.content);
+			const created = result.noteResults.filter(
+				(nr) => nr.action === "created"
+			);
+			const updated = result.noteResults.filter(
+				(nr) => nr.action === "updated"
+			);
+			const unchanged = result.noteResults.filter(
+				(nr) => nr.action === "unchanged"
+			);
 
-				const fields: BasicNoteFields = {
-					Front: md.name,
-					Back: htmlContent,
-				};
+			created.forEach((nr) => {
+				new Notice(`Note "${nr.name}" was created`);
+			});
 
-				const result = await anki.upsertNote(fields, md.deck);
+			updated.forEach((nr) => {
+				new Notice(`Note "${nr.name}" was updated`);
+			});
 
-				if (
-					result.action === "created" ||
-					result.action === "updated"
-				) {
-					new Notice(`Note "${md.name}" was ${result.action}`);
-				} else {
-					unchanged++;
-				}
+			if (unchanged.length > 0) {
+				new Notice(`${unchanged.length} notes were unchanged`);
 			}
 
-			if (unchanged > 0) {
-				new Notice(`${unchanged} notes were unchanged`);
+			result.errors.forEach((error) => {
+				new Notice(`Error: ${error}`, 5000);
+			});
+
+			if (result.errors.length === 0) {
+				new Notice("Note processing completed successfully", 5000);
+			} else {
+				new Notice(
+					`Note processing completed with ${result.errors.length} errors`,
+					5000
+				);
 			}
-		} catch (e) {
+		} catch (error) {
 			new Notice(
-				`Note2Anki error: ${e instanceof Error ? e.message : String(e)}`
+				`Error processing notes: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				5000
 			);
 		}
 	}
