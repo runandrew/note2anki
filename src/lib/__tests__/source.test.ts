@@ -10,8 +10,12 @@ describe("MdParser", () => {
 	beforeEach(() => {
 		mockFileRepository = {
 			getFolder: jest.fn(),
-		} as jest.Mocked<FileRepository>;
+		};
 		mdParser = new MdParser(mockFileRepository);
+	});
+
+	afterEach(() => {
+		jest.clearAllMocks();
 	});
 
 	describe("parseMd", () => {

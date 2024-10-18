@@ -29,36 +29,32 @@ export class NoteProcessor {
 			errors: [],
 		};
 
-		try {
-			const mds = await new MdParser(this.fileRepository).parseMdDir(
-				folder,
-				recursive
-			);
-			result.totalNotes = mds.length;
+		const mds = await new MdParser(this.fileRepository).parseMdDir(
+			folder,
+			recursive
+		);
+		result.totalNotes = mds.length;
 
-			const anki = new AnkiConnect();
+		const anki = new AnkiConnect();
 
-			for (const md of mds) {
-				try {
-					const htmlContent = await marked(md.content);
-					const fields: BasicNoteFields = {
-						Front: md.name,
-						Back: htmlContent,
-					};
+		for (const md of mds) {
+			try {
+				const htmlContent = await marked(md.content);
+				const fields: BasicNoteFields = {
+					Front: md.name,
+					Back: htmlContent,
+				};
 
-					const noteResult = await anki.upsertNote(fields, md.deck);
-					result.noteResults.push({
-						name: md.name,
-						action: noteResult.action,
-					});
-				} catch (e) {
-					result.errors.push(
-						`Error processing note "${md.name}": ${printErr(e)}`
-					);
-				}
+				const noteResult = await anki.upsertNote(fields, md.deck);
+				result.noteResults.push({
+					name: md.name,
+					action: noteResult.action,
+				});
+			} catch (e) {
+				result.errors.push(
+					`Error processing note "${md.name}": ${printErr(e)}`
+				);
 			}
-		} catch (e) {
-			result.errors.push(`General error: ${printErr(e)}`);
 		}
 
 		return result;
