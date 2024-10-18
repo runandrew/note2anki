@@ -149,13 +149,9 @@ class SettingTab extends PluginSettingTab {
 					try {
 						await anki.requestPermission();
 						new Notice("Permission granted");
-					} catch (error) {
+					} catch (e) {
 						new Notice(
-							`Failed to request permission: ${
-								error instanceof Error
-									? error.message
-									: String(error)
-							}`
+							`Failed to request permission: ${printErr(e)}`
 						);
 					}
 				})
@@ -170,13 +166,9 @@ class SettingTab extends PluginSettingTab {
 						const anki = new AnkiConnect();
 						await anki.testConnection();
 						new Notice("Successfully connected to AnkiConnect!");
-					} catch (error) {
+					} catch (e) {
 						new Notice(
-							`Failed to connect to AnkiConnect: ${
-								error instanceof Error
-									? error.message
-									: String(error)
-							}`
+							`Failed to connect to AnkiConnect: ${printErr(e)}`
 						);
 					}
 				})
