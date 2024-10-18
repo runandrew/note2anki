@@ -1,6 +1,7 @@
 import { marked } from "marked";
 
 import { AnkiConnect, BasicNoteFields } from "./anki";
+import { printErr } from "./errors";
 import { FileRepository } from "./files";
 import { MdParser } from "./source";
 
@@ -50,20 +51,14 @@ export class NoteProcessor {
 						name: md.name,
 						action: noteResult.action,
 					});
-				} catch (error) {
+				} catch (e) {
 					result.errors.push(
-						`Error processing note "${md.name}": ${
-							error instanceof Error
-								? error.message
-								: String(error)
-						}`
+						`Error processing note "${md.name}": ${printErr(e)}`
 					);
 				}
 			}
 		} catch (e) {
-			result.errors.push(
-				`General error: ${e instanceof Error ? e.message : String(e)}`
-			);
+			result.errors.push(`General error: ${printErr(e)}`);
 		}
 
 		return result;

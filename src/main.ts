@@ -10,6 +10,7 @@ import {
 } from "obsidian";
 
 import { AnkiConnect } from "./lib/anki";
+import { printErr } from "./lib/errors";
 import { ObsidianFileRepository } from "./lib/files";
 import { NoteProcessor } from "./lib/processor";
 
@@ -116,13 +117,8 @@ export default class Note2Anki extends Plugin {
 					5000
 				);
 			}
-		} catch (error) {
-			new Notice(
-				`Error processing notes: ${
-					error instanceof Error ? error.message : String(error)
-				}`,
-				5000
-			);
+		} catch (e) {
+			new Notice(`Error processing notes: ${printErr(e)}`, 5000);
 		}
 	}
 }
