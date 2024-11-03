@@ -116,9 +116,7 @@ class SettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Note2Anki" });
-
-		containerEl.createEl("h3", { text: "Setup" });
+		new Setting(containerEl).setName("Setup").setHeading();
 
 		new Setting(containerEl)
 			.setName("Request AnkiConnect permission")
@@ -162,7 +160,7 @@ class SettingTab extends PluginSettingTab {
 				})
 			);
 
-		containerEl.createEl("h3", { text: "Settings" });
+		new Setting(containerEl).setName("Advanced").setHeading();
 
 		new Setting(containerEl)
 			.setName("Root folder")
