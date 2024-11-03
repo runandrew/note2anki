@@ -35,7 +35,7 @@ export default class Note2Anki extends Plugin {
 
 		this.addCommand({
 			id: "run-note2anki",
-			name: "Process Notes to Anki",
+			name: "Process notes to Anki",
 			callback: () => {
 				this.processNotes(
 					this.settings.folder,
@@ -121,10 +121,10 @@ class SettingTab extends PluginSettingTab {
 		containerEl.createEl("h3", { text: "Setup" });
 
 		new Setting(containerEl)
-			.setName("Request AnkiConnect Permission")
+			.setName("Request AnkiConnect permission")
 			.setDesc("Request permission to use AnkiConnect")
 			.addButton((button) =>
-				button.setButtonText("Request Permission").onClick(async () => {
+				button.setButtonText("Request permission").onClick(async () => {
 					const anki = new AnkiConnect();
 					try {
 						await anki.requestPermission();
@@ -142,10 +142,10 @@ class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Test AnkiConnect Connection")
+			.setName("Test AnkiConnect connection")
 			.setDesc("Test that the AnkiConnect server is available")
 			.addButton((button) =>
-				button.setButtonText("Test Connection").onClick(async () => {
+				button.setButtonText("Test connection").onClick(async () => {
 					try {
 						const anki = new AnkiConnect();
 						await anki.testConnection();
@@ -187,7 +187,7 @@ class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Include Subfolders")
+			.setName("Include subfolders")
 			.setDesc(
 				"If enabled, all subfolders will be searched for notes to convert"
 			)
