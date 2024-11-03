@@ -46,9 +46,6 @@ export class AnkiConnect {
 	});
 
 	async createNote(fields: BasicNoteFields, deck: string): Promise<number> {
-		console.log(
-			`Anki Connect: Creating note "${fields.Front}" in deck "${deck}"`
-		);
 		const result = await this.ankiConnect("addNote", {
 			note: {
 				deckName: deck,
@@ -68,9 +65,6 @@ export class AnkiConnect {
 		fields: BasicNoteFields,
 		deck: string
 	): Promise<void> {
-		console.log(
-			`Anki Connect: Updating note "${fields.Front}" in deck "${deck}"`
-		);
 		const result = await this.ankiConnect("updateNote", {
 			note: {
 				id: id,
@@ -85,7 +79,6 @@ export class AnkiConnect {
 		fields: BasicNoteFields,
 		deck: string
 	): Promise<UpsertNoteResult> {
-		console.log(`Upserting note: "${fields.Front}"`);
 		const existingNote = await this.findNoteByQuery({
 			front: fields.Front,
 			deck,
@@ -93,21 +86,17 @@ export class AnkiConnect {
 		});
 		if (existingNote) {
 			if (isEqual(existingNote.fields, fields)) {
-				console.log(`Note "${fields.Front}" has not changed`);
 				return { action: "unchanged" };
 			}
 			await this.updateNote(existingNote.id, fields, deck);
-			console.log(`Updated existing note: "${fields.Front}"`);
 			return { action: "updated" };
 		} else {
 			await this.createNote(fields, deck);
-			console.log(`Created new note: "${fields.Front}"`);
 			return { action: "created" };
 		}
 	}
 
 	async findNote(id: number): Promise<BasicNote | null> {
-		console.log(`Anki Connect: Finding note with ID "${id}"`);
 		const result = await this.ankiConnect("notesInfo", { notes: [id] });
 		const validatedResult = AnkiConnect.NotesInfoResultSchema.parse(result);
 		if (validatedResult && validatedResult.length > 0) {
@@ -133,7 +122,6 @@ export class AnkiConnect {
 		const queryString = Object.entries(query)
 			.map(([key, value]) => `${key}:"${value}"`)
 			.join(" ");
-		console.log(`Anki Connect: Finding note with query: ${queryString}`);
 		const result = await this.ankiConnect("findNotes", {
 			query: queryString,
 		});
