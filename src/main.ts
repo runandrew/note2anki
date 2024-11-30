@@ -1,4 +1,3 @@
-import { marked } from "marked";
 import {
 	App,
 	Notice,
@@ -10,8 +9,10 @@ import {
 	TAbstractFile,
 } from "obsidian";
 
-import { AnkiConnect, BasicNoteFields } from "./lib/anki";
-import { MdParser } from "./lib/source";
+import { AnkiConnect } from "./lib/anki";
+import { printErr } from "./lib/errors";
+import { ObsidianFileRepository } from "./lib/files";
+import { NoteProcessor } from "./lib/processor";
 
 interface Settings {
 	folder: string;
@@ -25,22 +26,23 @@ const DEFAULT_SETTINGS: Settings = {
 
 export default class Note2Anki extends Plugin {
 	settings: Settings;
+	private noteProcessingService: NoteProcessor;
 
 	async onload() {
 		await this.loadSettings();
+		this.noteProcessingService = new NoteProcessor(
+			new ObsidianFileRepository(this.app)
+		);
 
-		this.addRibbonIcon("lamp-desk", "Note2Anki", (evt: MouseEvent) => {
-			this.processNotes(this.settings.folder, this.settings.recursive);
+		this.addRibbonIcon("lamp-desk", "Note2Anki", () => {
+			this.processNotes();
 		});
 
 		this.addCommand({
 			id: "run-note2anki",
 			name: "Process notes to Anki",
 			callback: () => {
-				this.processNotes(
-					this.settings.folder,
-					this.settings.recursive
-				);
+				this.processNotes();
 			},
 		});
 
@@ -61,44 +63,62 @@ export default class Note2Anki extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	async processNotes(folder: string, recursive: boolean) {
+	private async processNotes() {
+		new Notice("Processing notes...");
 		try {
-			const mds = await new MdParser(this.app).parseMdDir(
-				folder,
-				recursive
+			const result = await this.noteProcessingService.processNotes(
+				this.settings.folder,
+				this.settings.recursive
 			);
-			new Notice(`Found ${mds.length} notes`);
 
-			const anki = new AnkiConnect();
-			let unchanged = 0;
+			new Notice(`Found ${result.totalNotes} notes`);
 
-			for (const md of mds) {
-				const htmlContent = await marked(md.content);
+			const created = result.noteResults.filter(
+				(nr) => nr.action === "created"
+			);
+			const updated = result.noteResults.filter(
+				(nr) => nr.action === "updated"
+			);
+			const unchanged = result.noteResults.filter(
+				(nr) => nr.action === "unchanged"
+			);
 
-				const fields: BasicNoteFields = {
-					Front: md.name,
-					Back: htmlContent,
-				};
-
-				const result = await anki.upsertNote(fields, md.deck);
-
-				if (
-					result.action === "created" ||
-					result.action === "updated"
-				) {
-					new Notice(`Note "${md.name}" was ${result.action}`);
-				} else {
-					unchanged++;
-				}
+			if (created.length > 0) {
+				new Notice(
+					created
+						.map((r) => `Note "${r.name}" was created`)
+						.join("\n"),
+					5000
+				);
 			}
 
-			if (unchanged > 0) {
-				new Notice(`${unchanged} notes were unchanged`);
+			if (updated.length > 0) {
+				new Notice(
+					updated
+						.map((r) => `Note "${r.name}" was updated`)
+						.join("\n"),
+					5000
+				);
+			}
+
+			if (unchanged.length > 0) {
+				new Notice(`${unchanged.length} notes were unchanged`, 5000);
+			}
+
+			result.errors.forEach((error) => {
+				new Notice(`Error: ${error}`, 5000);
+			});
+
+			if (result.errors.length === 0) {
+				new Notice("Note processing completed successfully", 5000);
+			} else {
+				new Notice(
+					`Note processing completed with ${result.errors.length} errors`,
+					5000
+				);
 			}
 		} catch (e) {
-			new Notice(
-				`Note2Anki error: ${e instanceof Error ? e.message : String(e)}`
-			);
+			new Notice(`Error processing notes: ${printErr(e)}`, 5000);
 		}
 	}
 }
@@ -127,13 +147,9 @@ class SettingTab extends PluginSettingTab {
 					try {
 						await anki.requestPermission();
 						new Notice("Permission granted");
-					} catch (error) {
+					} catch (e) {
 						new Notice(
-							`Failed to request permission: ${
-								error instanceof Error
-									? error.message
-									: String(error)
-							}`
+							`Failed to request permission: ${printErr(e)}`
 						);
 					}
 				})
@@ -148,13 +164,9 @@ class SettingTab extends PluginSettingTab {
 						const anki = new AnkiConnect();
 						await anki.testConnection();
 						new Notice("Successfully connected to AnkiConnect!");
-					} catch (error) {
+					} catch (e) {
 						new Notice(
-							`Failed to connect to AnkiConnect: ${
-								error instanceof Error
-									? error.message
-									: String(error)
-							}`
+							`Failed to connect to AnkiConnect: ${printErr(e)}`
 						);
 					}
 				})
